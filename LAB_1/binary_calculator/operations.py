@@ -1,7 +1,13 @@
 from binary_calculator.converter import *
 
 class Operations:
-    def __init__(self, number_1, number_2=None, bits=8):
+    DEFAULT_BITS = 8
+
+    DEFAULT_PRECISION = 5
+    DIRECT_CODE_TAG = "Прямой код"
+
+
+    def __init__(self, number_1, number_2=None, bits=DEFAULT_BITS):
         self.number_1 = number_1
         self.number_2 = number_2
         self.bits = bits
@@ -23,7 +29,8 @@ class Operations:
 
         max_value = (1 << (self.bits - 1)) - 1
         if result_abs > max_value:
-            raise OverflowError(f"Переполнение: результат {result_abs} не помещается в {self.bits} бит.")
+            OVERFLOW_ERROR = "Переполнение: результат {result_abs} не помещается в {self.bits} бит."
+            raise OverflowError(OVERFLOW_ERROR)
 
         result_binary = bin(result_abs)[2:].zfill(self.bits - 1)
         result_binary = result_sign + result_binary
@@ -33,9 +40,10 @@ class Operations:
         return result_decimal, result_binary
 
     # Деление прямой код
-    def binary_divide(self, precision=5):
+    def binary_divide(self, precision=DEFAULT_PRECISION):
         if self.number_2 == 0:
-            raise ZeroDivisionError("Деление на ноль невозможно!")
+            DIVISION_BY_ZERO_ERROR = "Деление на ноль невозможно!"
+            raise ZeroDivisionError(DIVISION_BY_ZERO_ERROR)
 
         def direct_code(n):
             if n >= 0:
@@ -68,7 +76,8 @@ class Operations:
                 quotient += "0"
             divisor >>= 1
 
-        quotient += "."
+        BINARY_POINT = "."
+        quotient += BINARY_POINT
 
         for _ in range(precision):
             dividend <<= 1
@@ -90,14 +99,14 @@ class Operations:
 
         return decimal_value, res_binary
 
-    def display_mult_direct(self, decimal_value, res_binary, bits=8):
+    def display_mult_direct(self, decimal_value, res_binary, bits=DEFAULT_BITS):
         converter = Converter(decimal_value, bits)
         print(f"Результат: {decimal_value}")
         print(f"Прямой код: {res_binary}")
         print(f"Обратный код: [{converter.reverse_code()}]")
         print(f"Дополнительный код: [{converter.additional_code()}]")
 
-    def display_number_info(self, number):
+    def display_number_info(self, number, bits=DEFAULT_BITS):
 
         converter = Converter(number, self.bits)
         print(f"Число введено: {number}")
