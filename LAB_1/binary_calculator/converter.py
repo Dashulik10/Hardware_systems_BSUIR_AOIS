@@ -1,5 +1,9 @@
 class Converter:
-    def __init__(self, number, bits=8):
+    DEFAULT_BITS = 8
+    CARRY_INITIAL = 1
+    CARRY_RESET = 0
+    BIT_SIGN_NEGATIVE = "1"
+    def __init__(self, number, bits=DEFAULT_BITS):
         self.number = number
         self.bits = bits
 
@@ -46,17 +50,20 @@ class Converter:
             return f"0 {direct.zfill(self.bits - 1)}"
 
         reverse = self.reverse_code().split(" ")[1]
-        initial_carry = 1
+
+        initial_carry = self.CARRY_INITIAL
         additional = ""
         for bit in reversed(reverse):
             if bit == "1" and initial_carry == 1:
                 additional = "0" + additional
             elif bit == "0" and initial_carry == 1:
                 additional = "1" + additional
-                initial_carry = 0
+
+                initial_carry = self.CARRY_RESET
             else:
                 additional = bit + additional
-        return f"1 {additional.zfill(self.bits - 1)}"
+
+        return f"{self.BIT_SIGN_NEGATIVE} {additional.zfill(self.bits - 1)}"
 
     def display_number_additional(self):
         print(f"Десятичное: {self.number}")
