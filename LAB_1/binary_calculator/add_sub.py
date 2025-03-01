@@ -1,8 +1,12 @@
 from binary_calculator.converter import *
 
 class AddSub:
+    DEFAULT_BITS = 8
+    ERROR_OVERFLOW_MESSAGE = "Переполнение при сложении в дополнительном коде!"
+    NEGATIVE_SIGN_ADJUSTMENT = 1
+    BINARY_BASE = 2
 
-    def __init__(self, number_1, number_2=None, bits=8):
+    def __init__(self, number_1, number_2=None, bits=DEFAULT_BITS):
         self.number_1 = number_1
         self.number_2 = number_2
         self.bits = bits
@@ -31,9 +35,9 @@ class AddSub:
             raise OverflowError("Переполнение при сложении в дополнительном коде!")
 
         if result_additional[0] == "1":
-            result_decimal = int(result_additional, 2) - (1 << self.bits)
+            result_decimal = int(result_additional, AddSub.BINARY_BASE) - (AddSub.NEGATIVE_SIGN_ADJUSTMENT << self.bits)
         else:
-            result_decimal = int(result_additional, 2)
+            result_decimal = int(result_additional, AddSub.BINARY_BASE)
 
         return result_decimal, result_additional
 
@@ -62,8 +66,5 @@ class AddSub:
         if number >= 0:
             bin_number = bin(number)[2:].zfill(bits)
         else:
-            bin_number = bin((1 << bits) + number)[2:]
+            bin_number = bin((AddSub.NEGATIVE_SIGN_ADJUSTMENT << bits) + number)[AddSub.NEGATIVE_SIGN_ADJUSTMENT:]
         return bin_number[-bits:]
-
-
-
