@@ -1,33 +1,31 @@
-from logical_parser import LogicParser
-from table import TruthTable
-from normal_forms import NormalForms
+from logical_processing.normal_forms import NormalForms
+from logical_processing.table import TruthTable
+
 
 def main():
-    while True:
-        try:
-            expression = input("Введите логическую функцию: ")
-            parser = LogicParser(expression)
-            parsed_expr = parser.parse()
-            variables = parser.variables
-            break
-        except ValueError as e:
-            print(e)
-            print("Попробуйте снова.")
+    expression = input("Введите логическое выражение: ")
+    try:
+        truth_table = TruthTable(expression)
+        table = truth_table.generate()
+        print("\nТаблица истинности:")
+        for values, result in table:
+            print(" | ".join([f"{int(values[var])}" for var in truth_table.variables]) + f" | {int(result)}")
 
-    truth_table = TruthTable(parsed_expr, variables)
-    table = truth_table.generate()
-    truth_table.display()
+        index_form = truth_table.to_index_form()
+        print("\nИндексная форма:")
+        print("Бинарная:", index_form["binary"])
+        print("Десятичная:", index_form["decimal"])
 
-    normal_forms = NormalForms(table, variables)
+        normal_forms = NormalForms(table, truth_table.variables)
+        forms = normal_forms.compute()
+        print("\nСКНФ:", forms["СКНФ"])
+        print("СКНФ Индексы:", forms["СКНФ Индексы"])
+        print("СДНФ:", forms["СДНФ"])
+        print("СДНФ Индексы:", forms["СДНФ Индексы"])
 
-    print_result("СДНФ", normal_forms.get_sdnf())
-    print_result("СКНФ", normal_forms.get_sknf())
-    print_result("Числовая форма СДНФ", normal_forms.get_numeric_sdnf())
-    print_result("Числовая форма СКНФ", normal_forms.get_numeric_sknf())
+    except ValueError as e:
+        print("Ошибка:", e)
 
-
-def print_result(title, result):
-    print(f"{title}: {result}\n")
 
 if __name__ == "__main__":
     main()
