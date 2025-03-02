@@ -1,27 +1,31 @@
+import itertools
+
+from logical_processing.expression_validator import ExpressionValidator
+from logical_processing.logic_evaluator import LogicEvaluator
+from logical_processing.rpn_converter import RPNConverter
+
+
 class TruthTable:
-    def __init__(self, expression, variables):
-        self.expression = expression
-        self.variables = variables
-        self.table = []
+    def __init__(self, expression):
+        ExpressionValidator.validate(expression)
+        converter = RPNConverter(expression)
+        self.rpn = converter.to_rpn()
+        self.variables = sorted(ExpressionValidator.VARIABLES & set(expression))
+        self.evaluator = LogicEvaluator(self.rpn)
 
     def generate(self):
-        num_vars = len(self.variables)
-        num_rows = 2 ** num_vars
+        table = []
+        for values in itertools.product([False, True], repeat=len(self.variables)):
+            values_dict = dict(zip(self.variables, values))
+            result = self.evaluator.evaluate(values_dict)
+            table.append((values_dict, result))
+        return table
 
-        for i in range(num_rows): # если 3 переменные то я от 1 до 8 беру числа и превращаю их в бинарку
-            values = self._decimal_to_binary_list(i, num_vars) # и есть перевод
-            context = dict(zip(self.variables, values)) # сразу сопоставляем значение и бинарку
-            result = eval(self.expression, {}, context) # строчку обрабатываем как выражение, глобальные переменные не используются
-            self.table.append((*values, int(result)))
-
-        return self.table
-
-    def _decimal_to_binary_list(self, num, length):
-        binary_str = bin(num)[2:].zfill(length) # обрезаем нули
-        return [int(bit) for bit in binary_str] # создаем список преобраззованных в число 101
-
-    def display(self):
-        print(" | ".join(self.variables) + " | F")
-        print("-" * (len(self.variables) * 4 + 4))
-        for row in self.table:
-            print(" | ".join(map(str, row)))
+    def to_index_form(self):
+        truth_table = self.generate()
+        binary_representation = "".join(str(int(result)) for _, result in truth_table)
+        decimal_value = int(binary_representation, 2)
+        return {
+            "binary": binary_representation,
+            "decimal": decimal_value
+        }
