@@ -8,7 +8,6 @@ from logical_processing.normal_forms import NormalForms
 
 class TestExpressionValidator(unittest.TestCase):
     def test_valid_expressions(self):
-        # Проверка корректных выражений
         valid_expressions = [
             "a & b",
             "a | !b",
@@ -77,7 +76,6 @@ class TestTruthTable(unittest.TestCase):
 
 class TestNormalFormsInit(unittest.TestCase):
     def test_valid_initialization(self):
-        # Корректные входные данные
         truth_table = [
             ({"a": False, "b": False}, False),
             ({"a": True, "b": True}, True),
@@ -91,7 +89,6 @@ class TestNormalFormsInit(unittest.TestCase):
         self.assertEqual(normal_forms.variables, variables)
 
     def test_empty_truth_table(self):
-        # Пустая таблица истинности
         truth_table = []
         variables = ["a", "b"]
 
@@ -102,7 +99,6 @@ class TestNormalFormsInit(unittest.TestCase):
         self.assertEqual(normal_forms.variables, variables)
 
     def test_empty_variables(self):
-        # Пустой список переменных
         truth_table = [
             ({"a": False}, False),
         ]
@@ -116,11 +112,9 @@ class TestNormalFormsInit(unittest.TestCase):
 
 class TestNormalFormsCompute(unittest.TestCase):
     def setUp(self):
-        # Стандартные данные для тестов
         self.variables = ["a", "b"]
 
     def test_compute_with_valid_truth_table(self):
-        # Корректная таблица истинности (a & b)
         truth_table = [
             ({"a": False, "b": False}, False),
             ({"a": False, "b": True}, False),
@@ -132,7 +126,6 @@ class TestNormalFormsCompute(unittest.TestCase):
 
 
     def test_compute_empty_truth_table(self):
-        # Пустая таблица истинности
         truth_table = []
         normal_forms = NormalForms(truth_table, self.variables)
         forms = normal_forms.compute()
