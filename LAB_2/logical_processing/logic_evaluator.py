@@ -1,6 +1,5 @@
 from logical_processing.expression_validator import ExpressionValidator
 
-
 class LogicEvaluator:
     def __init__(self, rpn_expression):
         self.rpn = rpn_expression
@@ -14,14 +13,15 @@ class LogicEvaluator:
                 stack.append(not stack.pop())
             elif token == '&':
                 b, a = stack.pop(), stack.pop()
-                stack.append(a and b)
+                result = True if a == True and b == True else False
+                stack.append(result)
             elif token == '|':
                 b, a = stack.pop(), stack.pop()
-                stack.append(a or b)
+                stack.append(True if a is True or b is True else False)
             elif token == '->':
                 b, a = stack.pop(), stack.pop()
-                stack.append(not a or b)
+                stack.append(True if (not a or b) else False)
             elif token == '~':
                 b, a = stack.pop(), stack.pop()
-                stack.append(a == b)
+                stack.append(True if a == b else False)
         return stack[0]
