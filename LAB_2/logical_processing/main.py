@@ -5,18 +5,18 @@ from logical_processing.table import TruthTableWithSubexpressions
 def main():
     expression = input("Введите логическое выражение: ")
     try:
-        # Шаг 1: Генерация таблицы истинности
+        #Генерация таблицы истинности
         tt = TruthTableWithSubexpressions(expression)
         tt.display_table()
 
-        # Шаг 2: Вывод индексной формы
+        # Вывод индексной формы
         index_form = tt.to_index_form()
         print("\nИндексная форма:")
         print("Бинарная:", index_form["binary"])
         print("Десятичная:", index_form["decimal"])
 
-        # Шаг 3: Вычисление СКНФ и СДНФ
-        truth_table = tt.generate_table()  # Генерируем таблицу
+        # Вычисление СКНФ и СДНФ
+        truth_table = tt.generate_table()
         normal_forms = NormalForms(truth_table, tt.variables)
         forms = normal_forms.compute()
         print("\nСКНФ:", forms["СКНФ"])
