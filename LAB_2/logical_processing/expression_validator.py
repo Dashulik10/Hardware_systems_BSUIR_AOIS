@@ -4,15 +4,18 @@ class ExpressionValidator:
 
     @staticmethod
     def validate(expression):
-        expression = expression.replace(" ", "")  # Убираем пробелы
-        stack = []  # для проверки скобок
-        last = ''  # тут записан последний обработанный символ
+        expression = expression.replace(" ", "")
+        if not expression:
+            raise ValueError("Выражение не может быть пустым")
+        stack = []
+        last = ''
         valid_chars = ExpressionValidator.VARIABLES | {'(', ')', '!'}
         i = 0
         while i < len(expression):
             char = expression[i]
             if char in valid_chars:
-                pass  # Всё гуд, символ хороший
+                if char in ExpressionValidator.VARIABLES and last in ExpressionValidator.VARIABLES:
+                    raise ValueError("Между переменными должен быть оператор")
             elif char in {'&', '|', '~'}:
                 if last in ExpressionValidator.OPERATORS:
                     raise ValueError("Два оператора подряд недопустимы")
