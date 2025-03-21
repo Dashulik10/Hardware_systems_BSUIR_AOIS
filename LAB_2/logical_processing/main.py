@@ -1,22 +1,23 @@
+from logical_processing.min import Minimizing
 from logical_processing.normal_forms import NormalForms
-from logical_processing.table import TruthTable
-
+from logical_processing.table import TruthTableWithSubexpressions
 
 def main():
     expression = input("Введите логическое выражение: ")
     try:
-        truth_table = TruthTable(expression)
-        table = truth_table.generate()
-        print("\nТаблица истинности:")
-        for values, result in table:
-            print(" | ".join([f"{int(values[var])}" for var in truth_table.variables]) + f" | {int(result)}")
+        # Шаг 1: Генерация таблицы истинности
+        tt = TruthTableWithSubexpressions(expression)
+        tt.display_table()
 
-        index_form = truth_table.to_index_form()
+        # Шаг 2: Вывод индексной формы
+        index_form = tt.to_index_form()
         print("\nИндексная форма:")
         print("Бинарная:", index_form["binary"])
         print("Десятичная:", index_form["decimal"])
 
-        normal_forms = NormalForms(table, truth_table.variables)
+        # Шаг 3: Вычисление СКНФ и СДНФ
+        truth_table = tt.generate_table()  # Генерируем таблицу
+        normal_forms = NormalForms(truth_table, tt.variables)
         forms = normal_forms.compute()
         print("\nСКНФ:", forms["СКНФ"])
         print("СКНФ Индексы:", forms["СКНФ Индексы"])
@@ -25,7 +26,6 @@ def main():
 
     except ValueError as e:
         print("Ошибка:", e)
-
 
 if __name__ == "__main__":
     main()
