@@ -32,8 +32,16 @@ class RPNConverter:
             elif char == ')':
                 while stack and stack[-1] != '(':
                     output.append(stack.pop())
-                stack.pop()
+                if stack and stack[-1] == '(':
+                    stack.pop()
+                else:
+                    raise ValueError("Mismatched parentheses")
+            else:
+                raise ValueError(f"Unexpected character: {char}")
             i += 1
         while stack:
-            output.append(stack.pop())
+            top = stack.pop()
+            if top in '()':
+                raise ValueError("Mismatched parentheses")
+            output.append(top)
         return output
