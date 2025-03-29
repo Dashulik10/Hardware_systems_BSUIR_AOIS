@@ -215,33 +215,6 @@ class KarnaughMinimizer:
             for t1, t2 in zip(term1, term2)
         ]
 
-    def _minimize_cell(self, row, col, kmap, rows, columns, used_cells):
-        num_rows = len(kmap)
-        num_cols = len(kmap[0])
-        group = set()
-        group.add((row, col))
-        used_cells.add((row, col))
-
-        row_values = rows[row]
-        col_values = columns[col]
-        fixed_values = row_values + col_values
-
-        for r, c in [(row, (col + 1) % num_cols), ((row + 1) % num_rows, col)]:
-            if kmap[r][c] == 1 and (r, c) not in used_cells:
-                group.add((r, c))
-                used_cells.add((r, c))
-                combined_values = rows[r] + columns[c]
-                fixed_values = [
-                    fv if fv == cv else None
-                    for fv, cv in zip(fixed_values, combined_values)
-                ]
-        term = []
-        for i, value in enumerate(fixed_values):
-            if value is not None:
-                term.append(self.variables[i] if value == 1 else f"!{self.variables[i]}")
-
-        return term
-
     def _find_group_d(self, row, col, size, kmap, rows, columns, used_cells):
         num_rows = len(rows)
         num_cols = len(columns)
