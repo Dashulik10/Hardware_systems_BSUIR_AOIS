@@ -1,49 +1,31 @@
 import itertools
 import re
-from prettytable import PrettyTable
 
 class Minimizing:
 
     def build_sdnf_table(expression_d, min_d):
-        """
-        Построение таблицы для сравнения начальной и минимизированной СДНФ.
-
-        :param expression_d: Исходная СДНФ, представлена как список термов.
-        :param min_d: Минимизированная СДНФ, представлена как список термов.
-        """
-
-        # Преобразование чисел в термах (0, 1) в строки для корректной обработки
         def term_to_str(term):
             return [f"!{chr(97 + idx)}" if var == 0 else f"{chr(97 + idx)}" for idx, var in enumerate(term) if
                     var != "X"]
-
-        # Создаем заголовки таблицы из начальной СДНФ
         header_terms = [" & ".join(term_to_str(term)) for term in expression_d]
 
-        # Подготавливаем строки для минимизированной СДНФ
         minimized_terms = [" & ".join(term_to_str(term)) for term in min_d]
 
-        # Инициализация таблицы
         table = [["" for _ in range(len(header_terms) + 1)] for _ in range(len(minimized_terms) + 1)]
 
-        # Заполняем заголовок таблицы
-        table[0][0] = ""  # Левый верхний угол таблицы
+        table[0][0] = ""
         for j, term in enumerate(header_terms, start=1):
             table[0][j] = f"({term})"
 
-        # Заполняем строки минимизированных термов
         for i, min_term in enumerate(minimized_terms, start=1):
             table[i][0] = f"({min_term})"
             for j, expr_term in enumerate(expression_d, start=1):
-                # Преобразуем термы в списки строк для корректного сравнения
                 min_term_parts = term_to_str(min_d[i - 1])
                 expr_term_parts = term_to_str(expr_term)
 
-                # Проверяем, входит ли минимизированный терм в исходный
                 if all(item in expr_term_parts for item in min_term_parts):
                     table[i][j] = "X"
 
-        # Печать таблицы
         col_widths = [max(len(row[i]) for row in table) for i in range(len(table[0]))]
         for row in table:
             print(" | ".join(f"{row[i]:<{col_widths[i]}}" for i in range(len(row))))
@@ -229,26 +211,21 @@ class Minimizing:
         while True:
             print(f"\n=== ШАГ {step + 1} СКЛЕЙКИ ===")
 
-            # Выполняем склейку
             next_terms = Minimizing.compare_terms_sdnf(terms, variables)
 
-            # Убираем дубликаты
             unique_terms = []
             for term in next_terms:
                 if term not in unique_terms:
                     unique_terms.append(term)
 
-            # Отображаем таблицу после текущей склейки
             print("\nТаблица соответствий после склейки:")
             Minimizing.build_sdnf_table(terms, unique_terms)
 
-            # Генерация итогового вывода текущих термов
             print("\n")
             term_expressions = [f"({Minimizing.term_to_expression_sdnf(term, variables)})" for term in
                                 unique_terms]
             print("ВЫВОД:", " | ".join(term_expressions))
 
-            # Условия остановки: больше нечего склеивать
             if not unique_terms:
                 print("\nБольше нечего склеивать, минимизация завершена.")
                 result = Minimizing.remove_redundant_implicants_with_logic_d(term_expressions, variables)
@@ -277,7 +254,6 @@ class Minimizing:
 
         minimized_terms = [" | ".join(term_to_str(term)) for term in min_k]
 
-        # Инициализация таблицы
         table = [["" for _ in range(len(header_terms) + 1)] for _ in range(len(minimized_terms) + 1)]
 
         table[0][0] = ""
@@ -478,26 +454,21 @@ class Minimizing:
         while True:
             print(f"\n=== ШАГ {step + 1} СКЛЕЙКИ ===")
 
-            # Выполняем склейку
             next_terms = Minimizing.compare_terms_sknf(terms, variables)
 
-            # Убираем дубликаты
             unique_terms = []
             for term in next_terms:
                 if term not in unique_terms:
                     unique_terms.append(term)
 
-            # Отображаем таблицу после текущей склейки
             print("\nТаблица соответствий после склейки:")
             Minimizing.build_sknf_table(terms, unique_terms)
 
-            # Генерация итогового вывода текущих термов
             print("\n")
             term_expressions = [f"({Minimizing.term_to_expression_sknf(term, variables)})" for term in
                                 unique_terms]
             print("ВЫВОД:", " & ".join(term_expressions))
 
-            # Условия остановки: больше нечего склеивать
             if not unique_terms:
                 print("\nБольше нечего склеивать, минимизация завершена.")
                 result = Minimizing.remove_redundant_implicants_with_logic_k(term_expressions, variables)
