@@ -29,8 +29,8 @@ class KarnaughMinimizer:
 
         simplified_table = []
         for variable_values, _, final_result in table:
-            combination = [int(variable_values[var]) for var in self.variables]  # Значения переменных
-            simplified_table.append(combination + [int(final_result)])  # Добавляем результат
+            combination = [int(variable_values[var]) for var in self.variables] 
+            simplified_table.append(combination + [int(final_result)])  
 
         return simplified_table
 
@@ -167,7 +167,7 @@ class KarnaughMinimizer:
 
                     group = self._find_group_k(row_idx, col_idx, size, karnaugh_map, rows, columns, uncovered_cells)
                     if group:
-                        term = self._group_to_expression_k(group, rows, columns, sknf=True)  # Добавляем флаг для СКНФ
+                        term = self._group_to_expression_k(group, rows, columns, sknf=True)  
                         minimized_terms.append(term)
 
                         uncovered_cells -= group
