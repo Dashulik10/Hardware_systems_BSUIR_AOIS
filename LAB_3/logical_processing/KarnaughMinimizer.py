@@ -1,6 +1,5 @@
 from logical_processing.expression_validator import ExpressionValidator
 from logical_processing.table import TruthTableWithSubexpressions
-from logical_processing.min import Minimizing
 
 
 class KarnaughMinimizer:
@@ -29,8 +28,8 @@ class KarnaughMinimizer:
 
         simplified_table = []
         for variable_values, _, final_result in table:
-            combination = [int(variable_values[var]) for var in self.variables] 
-            simplified_table.append(combination + [int(final_result)])  
+            combination = [int(variable_values[var]) for var in self.variables]
+            simplified_table.append(combination + [int(final_result)])
 
         return simplified_table
 
@@ -112,233 +111,206 @@ class KarnaughMinimizer:
 
 
 
-    def minimize_sdnf(self):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def find_all_groups(self, for_sdnf=True):
         kmap = self.generate_karnaugh_map()
         rows = kmap["rows"]
         columns = kmap["columns"]
         karnaugh_map = kmap["map"]
 
-        minimized_terms = []
+        all_groups = []
 
-        uncovered_cells = {
-            (row, col)
-            for row in range(len(rows))
-            for col in range(len(columns))
-            if karnaugh_map[row][col] == 1
-        }
+        print("\n=== Поиск всех возможных групп ===")
 
-        for size in [4, 2, 1]:
-            for row_idx in range(len(rows)):
-                for col_idx in range(len(columns)):
-                    if (row_idx, col_idx) not in uncovered_cells:
-                        continue
+        target_value = 1 if for_sdnf else 0
 
-                    group = self._find_group_d(row_idx, col_idx, size, karnaugh_map, rows, columns, uncovered_cells)
-                    if group:
-                        term = self._group_to_expression_d(group, rows, columns)
-                        minimized_terms.append(term)
+        num_rows = len(rows)
+        num_cols = len(columns)
 
-                        uncovered_cells -= group
+        for size in [32, 16, 8, 4, 2, 1]:
+            for row in range(num_rows):
+                for col in range(num_cols):
+                    potential_group = self._find_group(row, col, size, karnaugh_map, rows, columns, target_value)
+                    if potential_group:
+                        print(f"Найдена группа размера {size}: {sorted(potential_group)}")
+                        all_groups.append(sorted(potential_group))
 
-        return " | ".join(
-            f"({' & '.join(filter(None, term))})" for term in minimized_terms
-        )
+        print("\nВсе группы:")
+        for group in all_groups:
+            print(group)
 
-    def minimize_sknf(self):
+        return all_groups
+
+    def _find_group(self, row, col, size, kmap, rows, columns, target_value):
+        num_rows = len(rows)
+        num_cols = len(columns)
+
+        group = set()
+
+        if size == 8:
+            group_1x8 = {(row, (col + x) % num_cols) for x in range(8)}
+            group_2x4 = {
+                ((row + x) % num_rows, (col + y) % num_cols)
+                for x in range(2) for y in range(4)
+            }
+            group_4x2 = {
+                ((row + x) % num_rows, (col + y) % num_cols)
+                for x in range(4) for y in range(2)
+            }
+
+            if len(group_2x4) == 8 and all(kmap[r][c] == target_value for r, c in group_2x4):
+                group = group_2x4
+            elif len(group_4x2) == 8 and all(kmap[r][c] == target_value for r, c in group_4x2):
+                group = group_4x2
+            elif len(group_1x8) == 8 and all(kmap[r][c] == target_value for r, c in group_1x8):
+                group = group_1x8
+
+        elif size == 16:
+            group_2x8 = {
+                ((row + x) % num_rows, (col + y) % num_cols)
+                for x in range(2) for y in range(8)
+            }
+            group_4x4 = {
+                ((row + x) % num_rows, (col + y) % num_cols)
+                for x in range(4) for y in range(4)
+            }
+            if len(group_4x4) == 16 and all(kmap[r][c] == target_value for r, c in group_4x4):
+                print(f"Группа 4x4 проходит: {[kmap[r][c] for r, c in group_4x4]}")
+                group = group_4x4
+            elif len(group_2x8) == 16 and all(kmap[r][c] == target_value for r, c in group_2x8):
+                print(f"Группа 2x8 проходит: {[kmap[r][c] for r, c in group_2x8]}")
+                group = group_2x8
+
+        elif size == 32:
+            group = {
+                ((row + x) % num_rows, (col + y) % num_cols)
+                for x in range(num_rows) for y in range(num_cols)
+            }
+            if not all(kmap[r][c] == target_value for r, c in group):
+                group = set()
+
+        elif size == 4:
+            group_horizontal = {
+                (row % num_rows, (col + x) % num_cols) for x in range(4)
+            }
+            group_vertical = {
+                ((row + x) % num_rows, col % num_cols) for x in range(4)
+            }
+
+            if all(kmap[r][c] == target_value for r, c in group_horizontal) and len(group_horizontal) == 4:
+                group = group_horizontal
+            elif all(kmap[r][c] == target_value for r, c in group_vertical) and len(group_vertical) == 4:
+                group = group_vertical
+
+        elif size == 2:
+            group_horizontal = {
+                (row % num_rows, (col + x) % num_cols) for x in range(2)
+            }
+            group_vertical = {
+                ((row + x) % num_rows, col % num_cols) for x in range(2)
+            }
+
+            if all(kmap[r][c] == target_value for r, c in group_horizontal) and len(group_horizontal) == 2:
+                group = group_horizontal
+            elif all(kmap[r][c] == target_value for r, c in group_vertical) and len(group_vertical) == 2:
+                group = group_vertical
+
+        elif size == 1:
+            group = {(row % num_rows, col % num_cols)}
+
+        if len(group) == size and all(kmap[r][c] == target_value for r, c in group):
+            return group
+
+        return None
+
+    def filter_groups(self, groups, for_sdnf=True):
         kmap = self.generate_karnaugh_map()
         rows = kmap["rows"]
         columns = kmap["columns"]
-        karnaugh_map = kmap["map"]
 
-        minimized_terms = []
+        target_value = 1 if for_sdnf else 0
 
-        uncovered_cells = {
-            (row, col)
-            for row in range(len(rows))
-            for col in range(len(columns))
-            if karnaugh_map[row][col] == 0
-        }
+        covered_cells = set()
 
-        for size in [4, 2, 1]:
-            for row_idx in range(len(rows)):
-                for col_idx in range(len(columns)):
-                    if (row_idx, col_idx) not in uncovered_cells:
-                        continue
+        sorted_groups = sorted(groups, key=len, reverse=True)
 
-                    group = self._find_group_k(row_idx, col_idx, size, karnaugh_map, rows, columns, uncovered_cells)
-                    if group:
-                        term = self._group_to_expression_k(group, rows, columns, sknf=True)  
-                        minimized_terms.append(term)
+        final_groups = []
 
-                        uncovered_cells -= group
+        print("\n=== Начинаем фильтрацию групп ===")
 
-        return " & ".join(
-            f"({' | '.join(filter(None, term))})" for term in minimized_terms
-        )
+        for group in sorted_groups:
+            uncovered_cells = [cell for cell in group if cell not in covered_cells]
 
+            # Логируем состояние группы
+            #print(f"\nРассматриваем группу: {group}")
+            #print(f"Непокрытые клетки в этой группе: {uncovered_cells}")
 
-    def _generate_term(self, row_values, col_values):
-        term = []
-        combined = row_values + col_values
-        for idx, value in enumerate(combined):
-            if value == 1:
-                term.append(self.variables[idx])
-            elif value == 0:
-                term.append(f"!{self.variables[idx]}")
-        return term
+            if uncovered_cells:
+                #print(f"Добавляем группу {group} в финальный список.")
+                final_groups.append(group)
 
-    def _perform_grouping(self, terms):
-        grouped = []
+                covered_cells.update(group)
+                #print(f"Обновлено покрытие клеток: {sorted(covered_cells)}")
+            #else:
+                #print(f"Пропускаем группу {group}, так как все её клетки уже покрыты.")
 
-        for term in terms:
-            for i, existing_term in enumerate(grouped):
-                if self._can_be_grouped(term, existing_term):
-                    grouped[i] = self._combine_terms(term, existing_term)
-                    break
-            else:
-                grouped.append(term)
+        print("\n=== Фильтрация завершена ===")
+        print(f"Финальные группы: {final_groups}")
 
-        return grouped
+        return final_groups
 
-    def _can_be_grouped(self, term1, term2):
-        differences = 0
-        for t1, t2 in zip(term1, term2):
-            if t1 != t2:
-                differences += 1
-            if differences > 1:
-                return False
-        return True
+    def generate_implicant(group, variable_names, for_sdnf=True):
+        num_variables = len(variable_names)
+        stable_variables = []
 
-    def _combine_terms(self, term1, term2):
-        return [
-            t1 if t1 == t2 else None
-            for t1, t2 in zip(term1, term2)
-        ]
+        for i in range(num_variables):
+            values = {code[i] for code in group}
+            if len(values) == 1:
+                value = values.pop()
+                if for_sdnf:
 
-    def _find_group_d(self, row, col, size, kmap, rows, columns, used_cells):
-        num_rows = len(rows)
-        num_cols = len(columns)
-
-        if size == 4:
-            group = {
-                (row % num_rows, col % num_cols),
-                (row % num_rows, (col + 1) % num_cols),
-                ((row + 1) % num_rows, col % num_cols),
-                ((row + 1) % num_rows, (col + 1) % num_cols),
-            }
-            if all(kmap[r][c] == 1 for r, c in group):
-                return group
-        if size == 2:
-            group_horizontal = {
-                (row % num_rows, col % num_cols),
-                (row % num_rows, (col + 1) % num_cols),
-            }
-            if all(kmap[r][c] == 1 for r, c in group_horizontal):
-                return group_horizontal
-
-            group_vertical = {
-                (row % num_rows, col % num_cols),
-                ((row + 1) % num_rows, col % num_cols),
-            }
-            if all(kmap[r][c] == 1 for r, c in group_vertical):
-                return group_vertical
-
-        if size == 1:
-            group_single = {(row % num_rows, col % num_cols)}
-            if kmap[row % num_rows][col % num_cols] == 1:
-                return group_single
-
-        return None
-
-    def _find_group_k(self, row, col, size, kmap, rows, columns, used_cells):
-        num_rows = len(rows)
-        num_cols = len(columns)
-
-        if size == 4:
-            group = {
-                (row % num_rows, col % num_cols),
-                (row % num_rows, (col + 1) % num_cols),
-                ((row + 1) % num_rows, col % num_cols),
-                ((row + 1) % num_rows, (col + 1) % num_cols),
-            }
-            if all(kmap[r][c] == 0 for r, c in group):
-                return group
-
-        if size == 2:
-            group_horizontal = {
-                (row % num_rows, col % num_cols),
-                (row % num_rows, (col + 1) % num_cols),
-            }
-            if all(kmap[r][c] == 0 for r, c in group_horizontal):
-                return group_horizontal
-
-            group_vertical = {
-                (row % num_rows, col % num_cols),
-                ((row + 1) % num_rows, col % num_cols),
-            }
-            if all(kmap[r][c] == 0 for r, c in group_vertical):
-                return group_vertical
-
-        if size == 1:
-            group_single = {(row % num_rows, col % num_cols)}
-            if kmap[row % num_rows][col % num_cols] == 0:
-                return group_single
-
-        return None
-
-    def _group_to_expression_d(self, group, rows, columns):
-        num_vars = len(self.variables)
-        fixed_values = [None] * num_vars
-
-        for row, col in group:
-            row_values = rows[row]
-            col_values = columns[col]
-            combined = row_values + col_values
-
-            for i, value in enumerate(combined):
-                if fixed_values[i] is None:
-                    fixed_values[i] = value
-                elif fixed_values[i] != value:
-                    print(f"Переменная {self.variables[i]} сброшена (меняется в группе)")
-                    fixed_values[i] = None
-
-        term = []
-        for i, var in enumerate(self.variables):
-            if fixed_values[i] is not None:
-                if fixed_values[i] == 1:
-                    term.append(var)
-                else:
-                    term.append(f"!{var}")
-        print(f"Сформирован терм: {term}")
-        return term
-
-    def _group_to_expression_k(self, group, rows, columns, sknf=False):
-        num_vars = len(self.variables)
-        fixed_values = [None] * num_vars
-
-        for row, col in group:
-            row_values = rows[row]
-            col_values = columns[col]
-            combined = row_values + col_values
-
-            for i, value in enumerate(combined):
-                if fixed_values[i] is None:
-                    fixed_values[i] = value
-                elif fixed_values[i] != value:
-                    fixed_values[i] = None
-
-        term = []
-        for i, var in enumerate(self.variables):
-            if fixed_values[i] is not None:
-                if sknf:
-                    if fixed_values[i] == 0:
-                        term.append(var)
+                    if value == 0:
+                        stable_variables.append(f"!{variable_names[i]}")
                     else:
-                        term.append(f"!{var}")
+                        stable_variables.append(variable_names[i])
                 else:
-                    if fixed_values[i] == 1:
-                        term.append(var)
+                    if value == 1:
+                        stable_variables.append(f"!{variable_names[i]}")
                     else:
-                        term.append(f"!{var}")
+                        stable_variables.append(variable_names[i])
 
-        return term
+        separator = "&" if for_sdnf else " | "
+        return separator.join(stable_variables)
+
+    def _coords_to_binary(self, row, col):
+        kmap = self.generate_karnaugh_map()
+        rows = kmap["rows"]
+        columns = kmap["columns"]
+        return rows[row] + columns[col]
+
+    def _coords_to_binary(self, row, col):
+        kmap = self.generate_karnaugh_map()
+        rows = kmap["rows"]
+        columns = kmap["columns"]
+        return rows[row] + columns[col]
+
