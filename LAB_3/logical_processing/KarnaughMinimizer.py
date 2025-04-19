@@ -109,29 +109,6 @@ class KarnaughMinimizer:
         smaller = KarnaughMinimizer._generate_gray_code(num_bits - 1)
         return [[0] + code for code in smaller] + [[1] + code for code in reversed(smaller)]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def find_all_groups(self, for_sdnf=True):
         kmap = self.generate_karnaugh_map()
         rows = kmap["rows"]
